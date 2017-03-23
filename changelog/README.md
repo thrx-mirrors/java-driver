@@ -1,5 +1,10 @@
 ## Changelog
 
+### 3.2.1 (in progress)
+
+- [bug] JAVA-1431: Surface AuthenticationException during pool initialization.
+
+
 ### 3.2.0
 
 - [new feature] JAVA-1347: Add support for duration type.

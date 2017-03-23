@@ -15,20 +15,25 @@
  */
 package com.datastax.driver.core;
 
-import com.datastax.driver.core.exceptions.AuthenticationException;
-import com.google.common.util.concurrent.Uninterruptibles;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.net.InetSocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.Uninterruptibles;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
+import com.datastax.driver.core.exceptions.AuthenticationException;
+
 import static com.datastax.driver.core.CreateCCM.TestMode.PER_METHOD;
 import static com.datastax.driver.core.TestUtils.findHost;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests for authenticated cluster access
@@ -130,6 +135,31 @@ public class AuthenticationTest extends CCMTestsSupport {
                 ccm().resume(1);
             }
         }, 2000);
+    }
+
+    /**
+     * Ensures that the driver throws an AuthenticationException
+     * when an authentication error occurs during connection pool initialization.
+     *
+     * @jira_ticket JAVA-1431
+     */
+    @Test(groups = "short")
+    @CCMConfig(dirtiesContext = true)
+    public void should_not_connect_with_wrong_credentials() throws InterruptedException {
+        PlainTextAuthProvider authProvider = new PlainTextAuthProvider("cassandra", "cassandra");
+        Cluster cluster = Cluster.builder()
+            .addContactPoints(getContactPoints())
+            .withPort(ccm().getBinaryPort())
+            .withAuthProvider(authProvider)
+            .build();
+        cluster.init();
+        authProvider.setPassword("wrong");
+        try {
+            cluster.connect();
+            fail("should have thrown AuthenticationException");
+        } catch (AuthenticationException e) {
+            // ok
+        }
     }
 
 }
