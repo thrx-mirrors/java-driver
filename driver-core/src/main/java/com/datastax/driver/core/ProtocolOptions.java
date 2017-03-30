@@ -31,7 +31,7 @@ public class ProtocolOptions {
          */
         NONE("") {
             @Override
-            FrameCompressor compressor() {
+            FrameCompressor compressor(ProtocolVersion version) {
                 return null;
             }
         },
@@ -40,7 +40,11 @@ public class ProtocolOptions {
          */
         SNAPPY("snappy") {
             @Override
-            FrameCompressor compressor() {
+            FrameCompressor compressor(ProtocolVersion version) {
+                if (version.supportsChecksums())
+                    throw new IllegalStateException("Snappy compression is no longer supported. " +
+                            "Please switch to the LZ4 compressor or another " +
+                            "supported compression implementation.");
                 return SnappyCompressor.instance;
             }
         },
@@ -49,8 +53,10 @@ public class ProtocolOptions {
          */
         LZ4("lz4") {
             @Override
-            FrameCompressor compressor() {
-                return LZ4Compressor.instance;
+            FrameCompressor compressor(ProtocolVersion version) {
+                return version.supportsChecksums()
+                        ? ChecksummingFrameCompressor.LZ4_COMPRESSED
+                        : LZ4Compressor.instance;
             }
         };
 
@@ -60,7 +66,7 @@ public class ProtocolOptions {
             this.protocolName = protocolName;
         }
 
-        abstract FrameCompressor compressor();
+        abstract FrameCompressor compressor(ProtocolVersion version);
 
         static Compression fromString(String str) {
             for (Compression c : values()) {
@@ -75,8 +81,6 @@ public class ProtocolOptions {
             return protocolName;
         }
     }
-
-    ;
 
     /**
      * The default port for Cassandra native binary protocol: 9042.
@@ -194,7 +198,7 @@ public class ProtocolOptions {
      *                               unavailable.
      */
     public ProtocolOptions setCompression(Compression compression) {
-        if (compression != Compression.NONE && compression.compressor() == null)
+        if (compression != Compression.NONE && compression.compressor(initialProtocolVersion) == null)
             throw new IllegalStateException("The requested compression is not available (some compression require a JAR to be found in the classpath)");
 
         this.compression = compression;
