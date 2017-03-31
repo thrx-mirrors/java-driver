@@ -198,7 +198,7 @@ public class ProtocolOptions {
      *                               unavailable.
      */
     public ProtocolOptions setCompression(Compression compression) {
-        if (compression != Compression.NONE && compression.compressor(initialProtocolVersion) == null)
+        if (compression != Compression.NONE && compression.compressor(ProtocolVersion.NEWEST_SUPPORTED) == null)
             throw new IllegalStateException("The requested compression is not available (some compression require a JAR to be found in the classpath)");
 
         this.compression = compression;
