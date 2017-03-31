@@ -94,7 +94,7 @@ class ChecksumFrameCompressor extends FrameCompressor {
 
     private static final int DEFAULT_BLOCK_SIZE = 1 << 15; // 32k block size
 
-    private static final int CHUNK_HEADER_OVERHEAD = Integer.BYTES + Integer.BYTES + Integer.BYTES + Integer.BYTES;
+    private static final int CHUNK_HEADER_OVERHEAD = 16;
 
     private static final FastThreadLocal<CRC32> CHECKSUM = new FastThreadLocal<CRC32>() {
         @Override
@@ -126,7 +126,7 @@ class ChecksumFrameCompressor extends FrameCompressor {
         // be pessimistic about life and assume the compressed output will be the same size as the input bytes
         int maxTotalCompressedLength = maxCompressedLength(inputBuf.readableBytes());
         int expectedChunks = (int) Math.ceil((double) maxTotalCompressedLength / DEFAULT_BLOCK_SIZE);
-        int expectedMaxSerializedLength = Short.BYTES + (expectedChunks * CHUNK_HEADER_OVERHEAD) + maxTotalCompressedLength;
+        int expectedMaxSerializedLength = 2 + (expectedChunks * CHUNK_HEADER_OVERHEAD) + maxTotalCompressedLength;
         byte[] retBuf = new byte[expectedMaxSerializedLength];
         ByteBuf ret = Unpooled.wrappedBuffer(retBuf);
         ret.writerIndex(0);
