@@ -88,13 +88,17 @@ import java.util.zip.Checksum;
  * </ul>
  * <p>
  */
-class ChecksumFrameCompressor extends FrameCompressor {
+class ChecksumCompressor extends FrameCompressor {
 
-    static final ChecksumFrameCompressor INSTANCE = new ChecksumFrameCompressor();
+    static final ChecksumCompressor INSTANCE = new ChecksumCompressor();
+
+    private static final int INTEGER_BYTES = 4;
+
+    private static final int SHORT_BYTES = 2;
 
     private static final int DEFAULT_BLOCK_SIZE = 1 << 15; // 32k block size
 
-    private static final int CHUNK_HEADER_OVERHEAD = 16;
+    private static final int CHUNK_HEADER_OVERHEAD = INTEGER_BYTES * 4;
 
     private static final FastThreadLocal<CRC32> CHECKSUM = new FastThreadLocal<CRC32>() {
         @Override
@@ -120,15 +124,14 @@ class ChecksumFrameCompressor extends FrameCompressor {
      *
      * @param inputBuf the input/source buffer of what we are going to compress
      * @return a single ByteBuf with all the compressed bytes serialized in the compressed/chunk'ed/checksum'ed format
-     * @throws IOException if we fail while compressing the input blocks or read from the inputBuf itself
      */
-    ByteBuf compress(ByteBuf inputBuf) throws IOException {
+    ByteBuf compress(ByteBuf inputBuf) {
         // be pessimistic about life and assume the compressed output will be the same size as the input bytes
         int maxTotalCompressedLength = maxCompressedLength(inputBuf.readableBytes());
         int expectedChunks = (int) Math.ceil((double) maxTotalCompressedLength / DEFAULT_BLOCK_SIZE);
-        int expectedMaxSerializedLength = 2 + (expectedChunks * CHUNK_HEADER_OVERHEAD) + maxTotalCompressedLength;
-        byte[] retBuf = new byte[expectedMaxSerializedLength];
-        ByteBuf ret = Unpooled.wrappedBuffer(retBuf);
+        int expectedMaxSerializedLength = SHORT_BYTES + (expectedChunks * CHUNK_HEADER_OVERHEAD) + maxTotalCompressedLength;
+
+        ByteBuf ret = inputBuf.alloc().buffer(expectedMaxSerializedLength);
         ret.writerIndex(0);
         ret.readerIndex(0);
 
@@ -156,12 +159,8 @@ class ChecksumFrameCompressor extends FrameCompressor {
                 // this really shouldn't ever happen -- it means we either mis-calculated the number of chunks we
                 // expected to create, we gave some input to the lz4 compresser that caused the output to be much
                 // larger than the input.. or some other edge condition. Regardless -- resize if necessary.
-                byte[] resizedRetBuf = new byte[(retBuf.length + (CHUNK_HEADER_OVERHEAD + written)) * 3 / 2];
-                System.arraycopy(retBuf, 0, resizedRetBuf, 0, retBuf.length);
-                retBuf = resizedRetBuf;
-                ByteBuf resizedRetByteBuf = Unpooled.wrappedBuffer(retBuf);
-                resizedRetByteBuf.writerIndex(ret.writerIndex());
-                ret = resizedRetByteBuf;
+                expectedMaxSerializedLength = (expectedMaxSerializedLength + (CHUNK_HEADER_OVERHEAD + written)) * 3 / 2;
+                ret.capacity(expectedMaxSerializedLength);
             }
 
             ret.writeInt(written); // compressed length of chunk
@@ -265,9 +264,8 @@ class ChecksumFrameCompressor extends FrameCompressor {
      * @param length the total number of bytes from srcOffset to pass to the compressor implementation
      * @param dest   the output buffer to write the compressed bytes to
      * @return the legnth of resulting compressed bytes written into the dest buffer
-     * @throws IOException if the compression implementation failed while compressing the input bytes
      */
-    int compressChunk(byte[] src, int length, byte[] dest) throws IOException {
+    int compressChunk(byte[] src, int length, byte[] dest) {
         System.arraycopy(src, 0, dest, 0, length);
         return length;
     }

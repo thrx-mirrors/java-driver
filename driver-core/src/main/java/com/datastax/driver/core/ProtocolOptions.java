@@ -55,7 +55,7 @@ public class ProtocolOptions {
             @Override
             FrameCompressor compressor(ProtocolVersion version) {
                 return version.supportsChecksums()
-                        ? LZ4ChecksumFrameCompressor.INSTANCE
+                        ? LZ4ChecksumCompressor.INSTANCE
                         : LZ4Compressor.INSTANCE;
             }
         };

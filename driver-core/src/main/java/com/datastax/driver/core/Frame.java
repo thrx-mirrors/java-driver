@@ -305,7 +305,7 @@ class Frame {
                 assert compressor != null;
                 out.add(decompressAndRelease(frame, compressor));
             } else if (frame.header.version.supportsChecksums()) {
-                out.add(decompressAndRelease(frame, ChecksumFrameCompressor.INSTANCE));
+                out.add(decompressAndRelease(frame, ChecksumCompressor.INSTANCE));
             } else {
                 out.add(frame);
             }
@@ -339,7 +339,7 @@ class Frame {
             // Never compress STARTUP messages
             if (frame.header.opcode == Message.Request.Type.STARTUP.opcode) {
                 if (supportsChecksums)
-                    out.add(compressAndRelease(frame, ChecksumFrameCompressor.INSTANCE));
+                    out.add(compressAndRelease(frame, ChecksumCompressor.INSTANCE));
                 else
                     out.add(frame);
             } else {
@@ -349,7 +349,7 @@ class Frame {
                     if (compressor != null)
                         out.add(compressAndRelease(frame, compressor));
                     else
-                        out.add(compressAndRelease(frame, ChecksumFrameCompressor.INSTANCE));
+                        out.add(compressAndRelease(frame, ChecksumCompressor.INSTANCE));
                 } else {
                     if (compressor != null)
                         out.add(compressAndRelease(frame, compressor));

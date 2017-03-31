@@ -16,12 +16,9 @@
 package com.datastax.driver.core;
 
 
-import java.io.IOException;
+class LZ4ChecksumCompressor extends ChecksumCompressor {
 
-
-class LZ4ChecksumFrameCompressor extends ChecksumFrameCompressor {
-
-    static final LZ4ChecksumFrameCompressor INSTANCE = new LZ4ChecksumFrameCompressor();
+    static final LZ4ChecksumCompressor INSTANCE = new LZ4ChecksumCompressor();
 
     @Override
     int maxCompressedLength(int length) {
@@ -29,12 +26,12 @@ class LZ4ChecksumFrameCompressor extends ChecksumFrameCompressor {
     }
 
     @Override
-    int compressChunk(byte[] src, int length, byte[] dest) throws IOException {
+    int compressChunk(byte[] src, int length, byte[] dest) {
         return LZ4Compressor.INSTANCE.compressor.compress(src, 0, length, dest, 0);
     }
 
     @Override
-    byte[] decompressChunk(byte[] src, int expectedDecompressedLength) throws IOException {
+    byte[] decompressChunk(byte[] src, int expectedDecompressedLength) {
         return LZ4Compressor.INSTANCE.decompressor.decompress(src, expectedDecompressedLength);
     }
 
