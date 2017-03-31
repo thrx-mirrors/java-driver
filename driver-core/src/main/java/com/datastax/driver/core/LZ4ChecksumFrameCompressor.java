@@ -18,27 +18,24 @@ package com.datastax.driver.core;
 
 import java.io.IOException;
 
-class ChecksummingFrameCompressor extends FrameCompressor {
 
-    static final ChecksummingFrameCompressor UNCOMPRESSED =
-            new ChecksummingFrameCompressor(Checksummer.UNCOMPRESSED);
+class LZ4ChecksumFrameCompressor extends ChecksumFrameCompressor {
 
-    static final ChecksummingFrameCompressor LZ4_COMPRESSED =
-            new ChecksummingFrameCompressor(Checksummer.LZ4_COMPRESSED);
+    static final LZ4ChecksumFrameCompressor INSTANCE = new LZ4ChecksumFrameCompressor();
 
-    private final Checksummer checksummer;
-
-    ChecksummingFrameCompressor(Checksummer checksummer) {
-        this.checksummer = checksummer;
+    @Override
+    int maxCompressedLength(int length) {
+        return LZ4Compressor.INSTANCE.compressor.maxCompressedLength(length);
     }
 
     @Override
-    Frame compress(Frame frame) throws IOException {
-        return frame.with(checksummer.transformOutbound(frame.body));
+    int compressChunk(byte[] src, int length, byte[] dest) throws IOException {
+        return LZ4Compressor.INSTANCE.compressor.compress(src, 0, length, dest, 0);
     }
 
     @Override
-    Frame decompress(Frame frame) throws IOException {
-        return frame.with(checksummer.transformInbound(frame.body));
+    byte[] decompressChunk(byte[] src, int expectedDecompressedLength) throws IOException {
+        return LZ4Compressor.INSTANCE.decompressor.decompress(src, expectedDecompressedLength);
     }
+
 }

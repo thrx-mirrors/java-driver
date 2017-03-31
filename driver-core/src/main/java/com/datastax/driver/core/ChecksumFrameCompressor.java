@@ -15,6 +15,7 @@
  */
 package com.datastax.driver.core;
 
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.concurrent.FastThreadLocal;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.net.ProtocolException;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
+
 
 /**
  * Provides a format that implements chunking and checksumming logic
@@ -38,7 +40,6 @@ import java.util.zip.Checksum;
  * <strong>1.1. Checksumed/Compression Serialized Format</strong>
  * <p>
  * <pre>
- * {@code
  *                      1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -72,7 +73,6 @@ import java.util.zip.Checksum;
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |                      CRC32 Checksum (en)                     ||
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
- * }
  * </pre>
  * <p>
  * <p>
@@ -88,15 +88,11 @@ import java.util.zip.Checksum;
  * </ul>
  * <p>
  */
-class Checksummer {
+class ChecksumFrameCompressor extends FrameCompressor {
 
-    static final Checksummer UNCOMPRESSED =
-            new Checksummer(Checksummer.DEFAULT_BLOCK_SIZE, new NoOpChunkCompressor());
+    static final ChecksumFrameCompressor INSTANCE = new ChecksumFrameCompressor();
 
-    static final Checksummer LZ4_COMPRESSED =
-            new Checksummer(Checksummer.DEFAULT_BLOCK_SIZE, new LZ4ChunkCompressor());
-
-    final static int DEFAULT_BLOCK_SIZE = 1 << 15; // 32k block size
+    private static final int DEFAULT_BLOCK_SIZE = 1 << 15; // 32k block size
 
     private static final int CHUNK_HEADER_OVERHEAD = Integer.BYTES + Integer.BYTES + Integer.BYTES + Integer.BYTES;
 
@@ -107,31 +103,29 @@ class Checksummer {
         }
     };
 
-    private final int blockSize;
-    private final ChunkCompressor compressor;
+    @Override
+    Frame compress(Frame frame) throws IOException {
+        return frame.with(compress(frame.body));
+    }
 
-    /**
-     * @param blockSize  how big each block/chunk will be (defaults to DEFAULT_BLOCK_SIZE kb)
-     * @param compressor provides compression functions to apply to chunks before checksumming
-     */
-    private Checksummer(int blockSize, ChunkCompressor compressor) {
-        this.blockSize = blockSize;
-        this.compressor = compressor;
+    @Override
+    Frame decompress(Frame frame) throws IOException {
+        return frame.with(decompress(frame.body));
     }
 
     /**
      * Compresses and consumes the entire length from the starting offset or reader index to the length
-     * in a serialization format as described in {@link Checksummer}
-     * adding checksums and chunking to the frame body
+     * in a serialization format as described in this class javadoc,
+     * adding checksums and chunking to the frame body.
      *
      * @param inputBuf the input/source buffer of what we are going to compress
      * @return a single ByteBuf with all the compressed bytes serialized in the compressed/chunk'ed/checksum'ed format
      * @throws IOException if we fail while compressing the input blocks or read from the inputBuf itself
      */
-    ByteBuf transformOutbound(ByteBuf inputBuf) throws IOException {
+    ByteBuf compress(ByteBuf inputBuf) throws IOException {
         // be pessimistic about life and assume the compressed output will be the same size as the input bytes
-        int maxTotalCompressedLength = compressor.maxCompressedLength(inputBuf.readableBytes());
-        int expectedChunks = (int) Math.ceil((double) maxTotalCompressedLength / blockSize);
+        int maxTotalCompressedLength = maxCompressedLength(inputBuf.readableBytes());
+        int expectedChunks = (int) Math.ceil((double) maxTotalCompressedLength / DEFAULT_BLOCK_SIZE);
         int expectedMaxSerializedLength = Short.BYTES + (expectedChunks * CHUNK_HEADER_OVERHEAD) + maxTotalCompressedLength;
         byte[] retBuf = new byte[expectedMaxSerializedLength];
         ByteBuf ret = Unpooled.wrappedBuffer(retBuf);
@@ -142,17 +136,17 @@ class Checksummer {
         // for the number of compressed chunks to expect
         ret.writeShort((short) 0);
 
-        byte[] inBuf = new byte[blockSize];
-        byte[] outBuf = new byte[compressor.maxCompressedLength(blockSize)];
+        byte[] inBuf = new byte[DEFAULT_BLOCK_SIZE];
+        byte[] outBuf = new byte[maxCompressedLength(DEFAULT_BLOCK_SIZE)];
 
         int numCompressedChunks = 0;
         int readableBytes;
         Checksum checksum = CHECKSUM.get();
         while ((readableBytes = inputBuf.readableBytes()) > 0) {
-            int lengthToRead = Math.min(blockSize, readableBytes);
+            int lengthToRead = Math.min(DEFAULT_BLOCK_SIZE, readableBytes);
             inputBuf.readBytes(inBuf, 0, lengthToRead);
 
-            int written = compressor.compressChunk(inBuf, 0, lengthToRead, outBuf, 0);
+            int written = compressChunk(inBuf, lengthToRead, outBuf);
 
             checksum.reset();
             checksum.update(inBuf, 0, lengthToRead);
@@ -198,7 +192,7 @@ class Checksummer {
      * @return the actual resulting decompressed bytes for usage (free of any serialization etc.)
      * @throws IOException if we failed to decompress or match a checksum check on a chunk
      */
-    ByteBuf transformInbound(ByteBuf inputBuf) throws IOException {
+    ByteBuf decompress(ByteBuf inputBuf) throws IOException {
         int numChunks = readUnsignedShort(inputBuf);
 
         int currentPosition = 0;
@@ -236,7 +230,7 @@ class Checksummer {
             // get the compressed bytes for this chunk
             inputBuf.readBytes(buf, 0, compressedLength);
             // decompress it
-            byte[] decompressedChunk = compressor.decompressChunk(buf, decompressedLength);
+            byte[] decompressedChunk = decompressChunk(buf, decompressedLength);
             // add the decompressed bytes into the ret buf
             System.arraycopy(decompressedChunk, 0, retBuf, currentPosition, decompressedChunk.length);
             currentPosition += decompressedChunk.length;
@@ -258,11 +252,44 @@ class Checksummer {
         return ret;
     }
 
+    /**
+     * @param length the decompressed length being compressed
+     * @return the maximum length output possible for an input of the provided length
+     */
+    int maxCompressedLength(int length) {
+        return length;
+    }
+
+    /**
+     * @param src    the input bytes to be compressed
+     * @param length the total number of bytes from srcOffset to pass to the compressor implementation
+     * @param dest   the output buffer to write the compressed bytes to
+     * @return the legnth of resulting compressed bytes written into the dest buffer
+     * @throws IOException if the compression implementation failed while compressing the input bytes
+     */
+    int compressChunk(byte[] src, int length, byte[] dest) throws IOException {
+        System.arraycopy(src, 0, dest, 0, length);
+        return length;
+    }
+
+    /**
+     * @param src                        the compressed bytes to be decompressed
+     * @param expectedDecompressedLength the expected length the input bytes will decompress to
+     * @return a byte[] containing the resuling decompressed bytes
+     * @throws IOException thrown if the compression implementation failed to decompress the provided input bytes
+     */
+    byte[] decompressChunk(byte[] src, int expectedDecompressedLength) throws IOException {
+        return src;
+    }
+
     private static int readUnsignedShort(ByteBuf buf) throws IOException {
         int ch1 = buf.readByte() & 0xFF;
         int ch2 = buf.readByte() & 0xFF;
         if ((ch1 | ch2) < 0)
             throw new IOException("Failed to read unsigned short as deserialized value is bogus/negative");
         return (ch1 << 8) + (ch2);
+
     }
+
+
 }

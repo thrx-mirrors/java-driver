@@ -45,7 +45,7 @@ public class ProtocolOptions {
                     throw new IllegalStateException("Snappy compression is no longer supported. " +
                             "Please switch to the LZ4 compressor or another " +
                             "supported compression implementation.");
-                return SnappyCompressor.instance;
+                return SnappyCompressor.INSTANCE;
             }
         },
         /**
@@ -55,8 +55,8 @@ public class ProtocolOptions {
             @Override
             FrameCompressor compressor(ProtocolVersion version) {
                 return version.supportsChecksums()
-                        ? ChecksummingFrameCompressor.LZ4_COMPRESSED
-                        : LZ4Compressor.instance;
+                        ? LZ4ChecksumFrameCompressor.INSTANCE
+                        : LZ4Compressor.INSTANCE;
             }
         };
 
