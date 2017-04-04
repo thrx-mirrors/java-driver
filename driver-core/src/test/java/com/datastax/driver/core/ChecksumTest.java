@@ -24,11 +24,18 @@ public class ChecksumTest extends CCMTestsSupport {
 
     @Test(groups = "short")
     public void should_connect_with_checksum() {
-        Cluster cluster = super.createClusterBuilder()
-                .addContactPointsWithPorts(ccm().addressOfNode(1))
-                .allowBetaProtocolVersion()
-                .build();
-        cluster.connect();
+        for (int i = 0; i < 100; i++) {
+            try {
+                Cluster cluster = super.createClusterBuilder()
+                        .addContactPointsWithPorts(ccm().addressOfNode(1))
+                        .allowBetaProtocolVersion()
+                        .withSocketOptions(new SocketOptions().setReadTimeoutMillis(1000000))
+                        .build();
+                cluster.connect();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Test(groups = "short")

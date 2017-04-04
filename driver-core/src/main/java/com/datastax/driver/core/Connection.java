@@ -1441,8 +1441,8 @@ class Connection {
             pipeline.addLast("frameDecoder", new Frame.Decoder());
             pipeline.addLast("frameEncoder", frameEncoder);
 
-            pipeline.addLast("frameDecompressor", new Frame.Decompressor(compressor));
-            pipeline.addLast("frameCompressor", new Frame.Compressor(compressor));
+//            pipeline.addLast("frameDecompressor", new Frame.Decompressor(compressor));
+//            pipeline.addLast("frameCompressor", new Frame.Compressor(compressor));
 
             pipeline.addLast("messageDecoder", messageDecoder);
             pipeline.addLast("messageEncoder", messageEncoderFor(protocolVersion));

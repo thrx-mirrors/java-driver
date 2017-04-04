@@ -179,8 +179,11 @@ public class CCMBridge implements CCMAccess {
             }
             envMap.put("PATH", ccmPath + File.pathSeparator + existingPath);
         }
-
-        if (isWindows()) {
+        
+        String executable = System.getProperty("ccm.executable");
+        if (executable != null) {
+            CCM_COMMAND = executable;
+        } else if (isWindows()) {
             CCM_COMMAND = "powershell.exe -ExecutionPolicy Unrestricted ccm.py";
         } else {
             CCM_COMMAND = "ccm";

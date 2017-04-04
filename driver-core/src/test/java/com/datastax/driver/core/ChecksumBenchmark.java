@@ -1,3 +1,18 @@
+/*
+ *      Copyright (C) 2012-2015 DataStax Inc.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
 package com.datastax.driver.core;
 
 import io.netty.buffer.ByteBuf;
@@ -50,6 +65,7 @@ public class ChecksumBenchmark {
         public void setUp() {
 
             if (ccm == null) {
+                System.setProperty("ccm.executable", "/usr/local/bin/ccm");
                 System.setProperty("ccm.path", "/Users/alexandredutra/.jenv/shims:/Users/alexandredutra/.jenv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:~/bin");
                 ccm = CCMBridge.builder()
                         .withVersion(VersionNumber.parse("4.0"))
@@ -87,8 +103,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Frame benchmark_1aa_micro_1_core_base() throws IOException {
@@ -100,8 +116,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Frame[] benchmark_1ab_micro_1_core_LZ4() throws IOException {
@@ -115,8 +131,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Frame[] benchmark_1ac_micro_1_core_checksum() throws IOException {
@@ -130,8 +146,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Frame[] benchmark_1ad_micro_1_core_LZ4_checksum() throws IOException {
@@ -145,8 +161,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Frame benchmark_1ba_micro_max_cores_base() throws IOException {
@@ -158,8 +174,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Frame[] benchmark_1bb_micro_max_cores_LZ4() throws IOException {
@@ -173,8 +189,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Frame[] benchmark_1bc_micro_max_cores_checksum() throws IOException {
@@ -188,8 +204,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Frame[] benchmark_1bd_micro_max_cores_LZ4_checksum() throws IOException {
@@ -203,8 +219,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Row benchmark_2aa_write_1_core_base(ChecksumBenchmarkState state) throws IOException {
@@ -212,8 +228,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Row benchmark_2ab_write_1_core_LZ4(ChecksumBenchmarkState state) throws IOException {
@@ -221,8 +237,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Row benchmark_2ac_write_1_core_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -230,8 +246,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public Row benchmark_2ad_write_1_core_LZ4_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -239,8 +255,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Row benchmark_2ba_write_max_cores_base(ChecksumBenchmarkState state) throws IOException {
@@ -248,8 +264,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Row benchmark_2bb_write_max_cores_LZ4(ChecksumBenchmarkState state) throws IOException {
@@ -257,8 +273,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Row benchmark_2bc_write_max_cores_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -266,8 +282,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public Row benchmark_2bd_write_max_cores_LZ4_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -275,8 +291,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public List<Row> benchmark_3aa_read_1_core_base(ChecksumBenchmarkState state) throws IOException {
@@ -284,8 +300,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public List<Row> benchmark_3ab_read_1_core_LZ4(ChecksumBenchmarkState state) throws IOException {
@@ -293,8 +309,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public List<Row> benchmark_3ac_read_1_core_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -302,8 +318,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(1)
     @Fork(1)
     public List<Row> benchmark_3ad_read_1_core_LZ4_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -311,8 +327,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public List<Row> benchmark_3ba_read_max_cores_base(ChecksumBenchmarkState state) throws IOException {
@@ -320,8 +336,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public List<Row> benchmark_3bb_read_max_cores_LZ4(ChecksumBenchmarkState state) throws IOException {
@@ -329,8 +345,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public List<Row> benchmark_3bc_read_max_cores_checksum(ChecksumBenchmarkState state) throws IOException {
@@ -338,8 +354,8 @@ public class ChecksumBenchmark {
     }
 
     @Benchmark
-    @BenchmarkMode({Mode.AverageTime, Mode.Throughput})
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Threads(MAX)
     @Fork(1)
     public List<Row> benchmark_3bd_read_max_cores_LZ4_checksum(ChecksumBenchmarkState state) throws IOException {
