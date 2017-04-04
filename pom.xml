@@ -46,7 +46,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cassandra.version>3.10</cassandra.version>
+        <cassandra.version>4.0</cassandra.version>
         <java.version>1.6</java.version>
         <log4j.version>1.2.17</log4j.version>
         <slf4j-log4j12.version>1.7.6</slf4j-log4j12.version>
@@ -446,6 +446,7 @@
                     <useFile>false</useFile>
                     <systemPropertyVariables>
                         <cassandra.version>${cassandra.version}</cassandra.version>
+                        <cassandra.directory>/Users/alexandredutra/Projects/datastax/cassandra</cassandra.directory>
                         <ipprefix>${ipprefix}</ipprefix>
                         <com.datastax.driver.NEW_NODE_DELAY_SECONDS>60</com.datastax.driver.NEW_NODE_DELAY_SECONDS>
                     </systemPropertyVariables>
