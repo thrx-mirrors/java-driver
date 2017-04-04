@@ -20,19 +20,27 @@ class LZ4ChecksumCompressor extends ChecksumCompressor {
 
     static final LZ4ChecksumCompressor INSTANCE = new LZ4ChecksumCompressor();
 
+    final net.jpountz.lz4.LZ4Compressor compressor;
+    final net.jpountz.lz4.LZ4FastDecompressor decompressor;
+
+    private LZ4ChecksumCompressor() {
+        compressor = LZ4Compressor.INSTANCE.compressor;
+        decompressor = LZ4Compressor.INSTANCE.decompressor;
+    }
+
     @Override
     int maxCompressedLength(int length) {
-        return LZ4Compressor.INSTANCE.compressor.maxCompressedLength(length);
+        return compressor.maxCompressedLength(length);
     }
 
     @Override
     int compressChunk(byte[] src, int length, byte[] dest) {
-        return LZ4Compressor.INSTANCE.compressor.compress(src, 0, length, dest, 0);
+        return compressor.compress(src, 0, length, dest, 0);
     }
 
     @Override
     byte[] decompressChunk(byte[] src, int expectedDecompressedLength) {
-        return LZ4Compressor.INSTANCE.decompressor.decompress(src, expectedDecompressedLength);
+        return decompressor.decompress(src, expectedDecompressedLength);
     }
 
 }
