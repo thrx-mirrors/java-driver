@@ -255,8 +255,9 @@ public class Mapper<T> {
         return option == null || option.saveNullFields;
     }
 
-    private static <T> void setObject(BoundStatement bs, int i, T value, AliasedMappedProperty<T> mapper) {
-        TypeCodec<T> customCodec = mapper.mappedProperty.getCustomCodec();
+    private static <T> void setObject(BoundStatement bs, int i, T value, AliasedMappedProperty mapper) {
+        @SuppressWarnings("unchecked")
+        TypeCodec<T> customCodec = (TypeCodec<T>) mapper.mappedProperty.getCustomCodec();
         if (customCodec != null)
             bs.set(i, value, customCodec);
         else
@@ -393,8 +394,7 @@ public class Mapper<T> {
                 BoundStatement bs = new MapperBoundStatement(input);
                 int i = 0;
                 for (Object value : primaryKeys) {
-                    @SuppressWarnings("unchecked")
-                    AliasedMappedProperty<Object> column = (AliasedMappedProperty<Object>) mapper.getPrimaryKeyColumn(i);
+                    AliasedMappedProperty column = mapper.getPrimaryKeyColumn(i);
                     if (value == null) {
                         throw new IllegalArgumentException(
                                 String.format("Invalid null value for PRIMARY KEY column %s (argument %d)",
@@ -602,7 +602,7 @@ public class Mapper<T> {
                 int columnNumber = 0;
                 for (Object value : primaryKey) {
                     @SuppressWarnings("unchecked")
-                    AliasedMappedProperty<Object> column = (AliasedMappedProperty<Object>) mapper.getPrimaryKeyColumn(columnNumber);
+                    AliasedMappedProperty column = mapper.getPrimaryKeyColumn(columnNumber);
                     if (value == null) {
                         throw new IllegalArgumentException(String.format("Invalid null value for PRIMARY KEY column %s (argument %d)",
                                 column.mappedProperty.getMappedName(), i));
